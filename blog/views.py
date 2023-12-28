@@ -75,6 +75,18 @@ class PostsV2(ModelViewSet):
     serializer_class = PostSerializer
     pagination_clas = NewLimitPageNumberPagination
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        author_id = self.request.query_params.get("author", None)
+
+        if author_id and author_id.isnumeric():
+            queryset = queryset.filter(author=author_id)
+
+            return queryset
+
+        return queryset
+
 
 ####################    V2    ####################
 ####################    V2    ####################
