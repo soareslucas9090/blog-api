@@ -145,4 +145,7 @@ REST_FRAMEWORK = {
     ),
     # Somente é autorizado o acesso, seja get, seja update/delete/post se autenticado
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
+    # Paginação
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
