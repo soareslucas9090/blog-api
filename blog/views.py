@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 
 from .models import *
 from .serializers import *
@@ -69,13 +70,7 @@ class NewLimitPageNumberPagination(PageNumberPagination):
     page_size = 5
 
 
-class PostsV2List(ListCreateAPIView):
-    queryset = Post.objects.prefetch_related("comments").all()
-    serializer_class = PostSerializer
-    pagination_clas = NewLimitPageNumberPagination
-
-
-class PostsV2Datails(RetrieveUpdateDestroyAPIView):
+class PostsV2(ModelViewSet):
     queryset = Post.objects.prefetch_related("comments").all()
     serializer_class = PostSerializer
     pagination_clas = NewLimitPageNumberPagination
