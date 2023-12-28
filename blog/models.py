@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Base(models.Model):
-    isActive = models.BooleanField(default=True, null=False)
+    is_active = models.BooleanField(default=True, null=False)
 
     class Meta:
         abstract = True
@@ -16,14 +16,22 @@ class BlogUser(Base):
     is_author = models.BooleanField(null=False, default=False)
     email = models.EmailField(null=False, unique=True)
 
+    def __str__(self):
+        str = f"{self.name}"
+        return str
+
 
 class Post(Base):
     tittle = models.CharField(max_length=255, unique=True)
     content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=True, null=True)
     is_visible = models.BooleanField(null=False, default=True)
     author = models.ForeignKey(BlogUser, on_delete=models.CASCADE)
+
+    def __str__(self):
+        str = f"{self.tittle}"
+        return str
 
 
 class Comment(Base):
@@ -31,3 +39,7 @@ class Comment(Base):
     user = models.ForeignKey(BlogUser, on_delete=models.CASCADE)
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        str = f"Coment of {self.user} on post {self.post}"
+        return str
