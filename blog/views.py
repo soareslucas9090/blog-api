@@ -3,11 +3,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import *
+from .permissions import IsOwnerPost
 from .serializers import *
 
 ####################    V1    ####################
@@ -75,7 +76,9 @@ class PostsV2(ModelViewSet):
     queryset = Post.objects.prefetch_related("comments").all()
     serializer_class = PostSerializer
     pagination_clas = NewLimitPageNumberPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -88,6 +91,22 @@ class PostsV2(ModelViewSet):
             return queryset
 
         return queryset
+
+    def get_object(self):
+        pk = self.kwargs.get("pk", "")
+
+        obj = get_object_or_404(self.get_queryset(), pk=pk)
+
+        self.check_object_permissions(self.request, obj)
+
+        return obj
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE"]:
+            return [
+                IsOwnerPost(),
+            ]
+        return super().get_permissions()
 
 
 ####################    V2    ####################
