@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 
 from .env import *
+from .rest_framework_settings import *
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = secretKey
+SECRET_KEY = secretKeyDjango
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = debug
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "rest_framework_simplejwt",
     "rest_framework",
     "blog",
 ]
@@ -136,17 +138,3 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-
-REST_FRAMEWORK = {
-    # Autenticação por seção está comentada pois foi implementada a por token, mas pode ter as duas
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        #'rest_framework.authentication.SessionAuthentication',
-        "rest_framework.authentication.TokenAuthentication",
-    ),
-    # Somente é autorizado o acesso, seja get, seja update/delete/post se autenticado
-    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.AllowAny",),
-    # Paginação
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 10,
-}

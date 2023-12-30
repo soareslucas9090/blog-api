@@ -3,15 +3,17 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import *
 from .serializers import *
 
+####################    V1    ####################
+####################    V1    ####################
 
-####################    V1    ####################
-####################    V1    ####################
+
 @api_view(http_method_names=["get", "post"])
 def posts(request):
     if request.method == "GET":
@@ -61,7 +63,6 @@ def post(request, pk):
 
 ##################################################
 
-
 ####################    V2    ####################
 ####################    V2    ####################
 
@@ -74,6 +75,7 @@ class PostsV2(ModelViewSet):
     queryset = Post.objects.prefetch_related("comments").all()
     serializer_class = PostSerializer
     pagination_clas = NewLimitPageNumberPagination
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = super().get_queryset()

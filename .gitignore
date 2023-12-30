@@ -146,6 +146,9 @@ dmypy.json
 # var envs
 env.py
 
+# tests tokens
+token.txt
+
 # Pyre type checker
 .pyre/
 
