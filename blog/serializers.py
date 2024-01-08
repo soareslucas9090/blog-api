@@ -32,6 +32,7 @@ class PostSerializer(serializers.ModelSerializer):
             "author",
             "comments",
         ]
+        read_only_fields = ["author"]
 
     created_at = serializers.DateTimeField(read_only=True)
     author = serializers.PrimaryKeyRelatedField(queryset=BlogUser.objects.all())
@@ -57,3 +58,12 @@ class PostSerializer(serializers.ModelSerializer):
             )
 
         return super().validate(aux)
+
+    def to_internal_value(self, data):
+        if "author" in data:
+            author_data = data.pop("author")
+            if isinstance(author_data, int):
+                data["author"] = author_data
+            else:
+                data["author"] = author_data.get("id")
+        return super().to_internal_value(data)

@@ -27,7 +27,7 @@ class Post(Base):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now_add=True, null=True)
     is_visible = models.BooleanField(null=False, default=True)
-    author = models.ForeignKey(BlogUser, on_delete=models.CASCADE)
+    author = models.ForeignKey(BlogUser, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
         str = f"{self.tittle}"
