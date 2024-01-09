@@ -7,7 +7,15 @@ from .models import *
 class UserAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
-        fields = "__all__"
+        fields = ["id", "username", "password", "email"]
+        
+    def validate_password(self, value):
+        password = value
+
+        if len(password) < 8:
+            raise serializers.ValidationError("Must have at least 8 chars.")
+
+        return password
 
 
 class UserSerializer(serializers.ModelSerializer):

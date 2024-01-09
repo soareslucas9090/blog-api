@@ -8,6 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from django.contrib.auth.hashers import make_password
 
 from .models import *
 from .permissions import IsOwnerPost
@@ -136,8 +137,11 @@ class BlogUserV2(ModelViewSet):
         self.serializer_class = BlogUserSerializer
         serializerBlog = self.get_serializer(data=request.data)
         serializerBlog.is_valid(raise_exception=True)
-
-        serializerUser.save()
+        
+        password256 = make_password(password=request.data["password"])
+        
+        serializerUser.save(password=password256)
+        
         user = User.objects.filter(username=request.data["username"]).first()
         request.data["user"] = user.id
         serializerBlog = self.get_serializer(data=request.data)
