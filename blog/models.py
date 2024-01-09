@@ -10,7 +10,7 @@ class Base(models.Model):
 
 
 class BlogUser(Base):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255, null=False)
     description = models.TextField()
     is_author = models.BooleanField(null=False, default=False)
@@ -25,7 +25,7 @@ class Post(Base):
     tittle = models.CharField(max_length=255, unique=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True, null=True)
-    updated_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
     is_visible = models.BooleanField(null=False, default=True)
     author = models.ForeignKey(BlogUser, on_delete=models.CASCADE, null=True)
 

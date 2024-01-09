@@ -1,12 +1,25 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from .models import *
 
 
+class UserAddSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = "__all__"
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        exclude = ("password",)
+
+
 class BlogUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogUser
-        fields = ["id", "name", "description", "is_author", "email"]
+        fields = "__all__"
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -58,12 +71,3 @@ class PostSerializer(serializers.ModelSerializer):
             )
 
         return super().validate(aux)
-
-    def to_internal_value(self, data):
-        if "author" in data:
-            author_data = data.pop("author")
-            if isinstance(author_data, int):
-                data["author"] = author_data
-            else:
-                data["author"] = author_data.get("id")
-        return super().to_internal_value(data)

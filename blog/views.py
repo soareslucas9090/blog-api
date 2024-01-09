@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -68,17 +70,18 @@ def post(request, pk):
 ####################    V2    ####################
 
 
-class NewLimitPageNumberPagination(PageNumberPagination):
+class PostsPageNumberPagination(PageNumberPagination):
     page_size = 5
 
 
 class PostsV2(ModelViewSet):
     queryset = Post.objects.prefetch_related("comments").all()
     serializer_class = PostSerializer
-    pagination_clas = NewLimitPageNumberPagination
+    pagination_class = PostsPageNumberPagination
     permission_classes = [
         IsAuthenticatedOrReadOnly,
     ]
+    http_method_names = ["get", "options", "head", "patch", "delete", "patch", "post"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -94,24 +97,19 @@ class PostsV2(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         blogUser = BlogUser.objects.filter(user=request.user.id).first()
-        request.data["author"] = blogUser.id
+        if blogUser.is_author:
+            request.data["author"] = blogUser.id
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
-    def get_object(self):
-        pk = self.kwargs.get("pk", "")
-
-        obj = get_object_or_404(self.get_queryset(), pk=pk)
-
-        self.check_object_permissions(self.request, obj)
-
-        return obj
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED, headers=headers
+            )
+        else:
+            dict = {"detail": "You need author permission."}
+            return Response(dict, status=status.HTTP_403_FORBIDDEN)
 
     def get_permissions(self):
         if self.request.method in ["PATCH", "DELETE"]:
@@ -119,6 +117,37 @@ class PostsV2(ModelViewSet):
                 IsOwnerPost(),
             ]
         return super().get_permissions()
+
+
+class BlogUserV2(ModelViewSet):
+    queryset = BlogUser.objects.all()
+    serializer_class = BlogUserSerializer
+    pagination_class = PostsPageNumberPagination
+    permission_classes = [
+        AllowAny,
+    ]
+    http_method_names = ["post"]
+
+    def create(self, request, *args, **kwargs):
+        self.serializer_class = UserAddSerializer
+        serializerUser = self.get_serializer(data=request.data)
+        serializerUser.is_valid(raise_exception=True)
+
+        self.serializer_class = BlogUserSerializer
+        serializerBlog = self.get_serializer(data=request.data)
+        serializerBlog.is_valid(raise_exception=True)
+
+        serializerUser.save()
+        user = User.objects.filter(username=request.data["username"]).first()
+        request.data["user"] = user.id
+        serializerBlog = self.get_serializer(data=request.data)
+        serializerBlog.is_valid(raise_exception=True)
+        serializerBlog.save()
+
+        headers = self.get_success_headers(serializerBlog.data)
+        return Response(
+            serializerBlog.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
 
 ####################    V2    ####################

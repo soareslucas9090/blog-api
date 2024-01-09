@@ -5,6 +5,7 @@ from .views import *
 
 blog_router = SimpleRouter()
 blog_router.register("posts", PostsV2)
+blog_router.register("users", BlogUserV2)
 
 urlpatterns = [
     path("v1/posts/", posts, name="posts"),
