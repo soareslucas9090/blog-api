@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import *
-from .permissions import IsAdminUser, IsOwnerPost, IsOwnerUser
+from .permissions import IsAdminUser, IsAnonymousUser, IsOwnerPost, IsOwnerUser
 from .serializers import *
 
 ####################    V1    ####################
@@ -132,6 +132,19 @@ class Users(ModelViewSet):
     http_method_names = ["get", "options", "head", "patch", "delete", "post"]
 
     def create(self, request, *args, **kwargs):
+        if "date_joined" in request.data:
+            request.data.pop("date_joined")
+        if "is_superuser" in request.data:
+            request.data.pop("is_superuser")
+        if "is_staff" in request.data:
+            request.data.pop("is_staff")
+        if "is_admin" in request.data:
+            request.data.pop("is_admin")
+        if "is_active" in request.data:
+            request.data.pop("is_active")
+        if "last_login" in request.data:
+            request.data.pop("last_login")
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -198,6 +211,11 @@ class Users(ModelViewSet):
                     return [
                         IsAdminUser(),
                     ]
+
+        if self.request.method in ["POST"]:
+            return [
+                IsAnonymousUser(),
+            ]
 
         return super().get_permissions()
 

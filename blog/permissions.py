@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from rest_framework import permissions
 
 
@@ -14,3 +15,8 @@ class IsOwnerUser(permissions.BasePermission):
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_admin
+
+
+class IsAnonymousUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return isinstance(request.user, AnonymousUser)
