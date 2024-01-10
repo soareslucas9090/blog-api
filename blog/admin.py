@@ -3,9 +3,19 @@ from django.contrib import admin
 from .models import *
 
 
-@admin.register(BlogUser)
+@admin.register(User)
 class BlogUserAdmin(admin.ModelAdmin):
-    list_display = ["id", "user", "name", "description", "is_author", "email"]
+    list_display = [
+        "id",
+        "name",
+        "email",
+        "description",
+        "is_author",
+        "is_admin",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+    ]
 
 
 @admin.register(Post)

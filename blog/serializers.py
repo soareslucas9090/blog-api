@@ -4,11 +4,20 @@ from rest_framework import serializers
 from .models import *
 
 
-class UserAddSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
-        fields = ["id", "username", "password", "email"]
-        
+        model = User
+        fields = "__all__"
+
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "email": {"write_only": True},
+            "last_login": {"write_only": True},
+            "is_admin": {"write_only": True},
+            "is_active": {"write_only": True},
+            "is_superuser": {"write_only": True},
+        }
+
     def validate_password(self, value):
         password = value
 
@@ -18,16 +27,20 @@ class UserAddSerializer(serializers.ModelSerializer):
         return password
 
 
-class UserSerializer(serializers.ModelSerializer):
+class User2AdminSerializer(serializers.ModelSerializer):
     class Meta:
-        model = get_user_model()
-        exclude = ("password",)
-
-
-class BlogUserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BlogUser
+        model = User
         fields = "__all__"
+
+        extra_kwargs = {"password": {"write_only": True}}
+
+    def validate_password(self, value):
+        password = value
+
+        if len(password) < 8:
+            raise serializers.ValidationError("Must have at least 8 chars.")
+
+        return password
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -35,7 +48,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ["id", "user", "text", "created_at"]
 
-    user = serializers.PrimaryKeyRelatedField(queryset=BlogUser.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     created_at = serializers.DateTimeField(read_only=True)
 
 
@@ -56,7 +69,7 @@ class PostSerializer(serializers.ModelSerializer):
         read_only_fields = ["author"]
 
     created_at = serializers.DateTimeField(read_only=True)
-    author = serializers.PrimaryKeyRelatedField(queryset=BlogUser.objects.all())
+    author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     comments = CommentSerializer(many=True, read_only=True)
 
     def validate_tittle(self, value):

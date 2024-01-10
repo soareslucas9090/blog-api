@@ -1,17 +1,18 @@
 from datetime import datetime
 
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from django.contrib.auth.hashers import make_password
 
 from .models import *
-from .permissions import IsOwnerPost
+from .permissions import IsAdminUser, IsOwnerPost, IsOwnerUser
 from .serializers import *
 
 ####################    V1    ####################
@@ -82,7 +83,7 @@ class PostsV2(ModelViewSet):
     permission_classes = [
         IsAuthenticatedOrReadOnly,
     ]
-    http_method_names = ["get", "options", "head", "patch", "delete", "patch", "post"]
+    http_method_names = ["get", "options", "head", "patch", "delete", "post"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -97,9 +98,10 @@ class PostsV2(ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        blogUser = BlogUser.objects.filter(user=request.user.id).first()
-        if blogUser.is_author:
-            request.data["author"] = blogUser.id
+        print(request)
+        user = User.objects.filter(pk=request.user.id).first()
+        if user.is_author:
+            request.data["author"] = user.id
 
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
@@ -120,38 +122,84 @@ class PostsV2(ModelViewSet):
         return super().get_permissions()
 
 
-class BlogUserV2(ModelViewSet):
-    queryset = BlogUser.objects.all()
-    serializer_class = BlogUserSerializer
+class Users(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
     pagination_class = PostsPageNumberPagination
     permission_classes = [
-        AllowAny,
+        IsAuthenticatedOrReadOnly,
     ]
-    http_method_names = ["post"]
+    http_method_names = ["get", "options", "head", "patch", "delete", "post"]
 
     def create(self, request, *args, **kwargs):
-        self.serializer_class = UserAddSerializer
-        serializerUser = self.get_serializer(data=request.data)
-        serializerUser.is_valid(raise_exception=True)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        self.serializer_class = BlogUserSerializer
-        serializerBlog = self.get_serializer(data=request.data)
-        serializerBlog.is_valid(raise_exception=True)
-        
         password256 = make_password(password=request.data["password"])
-        
-        serializerUser.save(password=password256)
-        
-        user = User.objects.filter(username=request.data["username"]).first()
-        request.data["user"] = user.id
-        serializerBlog = self.get_serializer(data=request.data)
-        serializerBlog.is_valid(raise_exception=True)
-        serializerBlog.save()
 
-        headers = self.get_success_headers(serializerBlog.data)
+        serializer.save(password=password256)
+
+        headers = self.get_success_headers(serializer.data)
         return Response(
-            serializerBlog.data, status=status.HTTP_201_CREATED, headers=headers
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+
+        if "date_joined" in request.data:
+            request.data.pop("date_joined")
+        if "is_superuser" in request.data:
+            request.data.pop("is_superuser")
+
+        if not isinstance(request.user, AnonymousUser):
+            if not request.user.is_admin:
+                if "is_staff" in request.data:
+                    request.data.pop("is_staff")
+                if "is_admin" in request.data:
+                    request.data.pop("is_admin")
+                if "is_active" in request.data:
+                    request.data.pop("is_active")
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def list(self, request, *args, **kwargs):
+        if not isinstance(request.user, AnonymousUser):
+            if request.user.is_admin:
+                queryset = self.filter_queryset(self.get_queryset())
+
+                page = self.paginate_queryset(queryset)
+                self.serializer_class = User2AdminSerializer
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True)
+                    return self.get_paginated_response(serializer.data)
+
+                serializer = self.get_serializer(queryset, many=True)
+                return Response(serializer.data)
+
+        return super().list(request, *args, **kwargs)
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE"]:
+            if not isinstance(self.request.user, AnonymousUser):
+                if not self.request.user.is_admin:
+                    return [
+                        IsOwnerUser(),
+                    ]
+                else:
+                    return [
+                        IsAdminUser(),
+                    ]
+
+        return super().get_permissions()
 
 
 ####################    V2    ####################
