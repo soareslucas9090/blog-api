@@ -20,3 +20,8 @@ class IsAdminUser(permissions.BasePermission):
 class IsAnonymousUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return isinstance(request.user, AnonymousUser)
+
+
+class IsOwnerComment(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.user == request.user

@@ -12,7 +12,13 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import *
-from .permissions import IsAdminUser, IsAnonymousUser, IsOwnerPost, IsOwnerUser
+from .permissions import (
+    IsAdminUser,
+    IsAnonymousUser,
+    IsOwnerComment,
+    IsOwnerPost,
+    IsOwnerUser,
+)
 from .serializers import *
 
 ####################    V1    ####################
@@ -98,7 +104,6 @@ class PostsV2(ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        print(request)
         user = User.objects.filter(pk=request.user.id).first()
         if user.is_author:
             request.data["author"] = user.id
@@ -217,6 +222,47 @@ class Users(ModelViewSet):
                 IsAnonymousUser(),
             ]
 
+        return super().get_permissions()
+
+
+class Comments(ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    pagination_class = PostsPageNumberPagination
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+    http_method_names = ["get", "options", "head", "patch", "delete", "post"]
+
+    def create(self, request, *args, **kwargs):
+        user = User.objects.filter(pk=request.user.id).first()
+        request.data["user"] = user.id
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        user_id = self.request.query_params.get("user", None)
+
+        if user_id and user_id.isnumeric():
+            queryset = queryset.filter(user=user_id)
+
+            return queryset
+
+        return queryset
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE"]:
+            return [
+                IsOwnerComment(),
+            ]
         return super().get_permissions()
 
 

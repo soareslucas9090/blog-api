@@ -43,12 +43,22 @@ class User2AdminSerializer(serializers.ModelSerializer):
         return password
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ["id", "user", "text", "created_at"]
 
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    created_at = serializers.DateTimeField(read_only=True)
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ["id", "user", "text", "created_at", "post"]
+
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all())
     created_at = serializers.DateTimeField(read_only=True)
 
 
@@ -70,7 +80,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     created_at = serializers.DateTimeField(read_only=True)
     author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = CommentPostSerializer(many=True, read_only=True)
 
     def validate_tittle(self, value):
         tittle = value
