@@ -89,6 +89,9 @@ class Post(Base):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
     is_visible = models.BooleanField(null=False, default=True)
+    cover = models.ImageField(
+        upload_to="recipes/covers/%Y/%m/%d/", blank=True, default=""
+    )
     author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
