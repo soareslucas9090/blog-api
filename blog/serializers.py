@@ -67,6 +67,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = [
             "id",
+            "cover",
             "tittle",
             "content",
             "created_at",
