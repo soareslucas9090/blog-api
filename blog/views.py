@@ -101,20 +101,31 @@ class PostsV2(ModelViewSet):
 
             return queryset
 
+        category_id = self.request.query_params.get("category", None)
+
+        if category_id and category_id.isnumeric():
+            queryset = queryset.filter(category=category_id)
+
+            return queryset
+
         return queryset
 
     def create(self, request, *args, **kwargs):
         user = User.objects.filter(pk=request.user.id).first()
         if user.is_author:
-            request.data["author"] = user.id
+            if "category" in request.data:
+                request.data["author"] = user.id
 
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            headers = self.get_success_headers(serializer.data)
-            return Response(
-                serializer.data, status=status.HTTP_201_CREATED, headers=headers
-            )
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                headers = self.get_success_headers(serializer.data)
+                return Response(
+                    serializer.data, status=status.HTTP_201_CREATED, headers=headers
+                )
+            else:
+                dict = {"detail": "You must provide a valid category."}
+                return Response(dict, status=status.HTTP_400_BAD_REQUEST)
         else:
             dict = {"detail": "You need author permission."}
             return Response(dict, status=status.HTTP_403_FORBIDDEN)
@@ -123,6 +134,40 @@ class PostsV2(ModelViewSet):
         if self.request.method in ["PATCH", "DELETE"]:
             return [
                 IsOwnerPost(),
+            ]
+        return super().get_permissions()
+
+
+class Tags(ModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    pagination_class = PostsPageNumberPagination
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+    http_method_names = ["get", "options", "head", "patch", "delete", "post"]
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE", "POST"]:
+            return [
+                IsAdminUser(),
+            ]
+        return super().get_permissions()
+
+
+class Categorys(ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    pagination_class = PostsPageNumberPagination
+    permission_classes = [
+        IsAuthenticatedOrReadOnly,
+    ]
+    http_method_names = ["get", "options", "head", "patch", "delete", "post"]
+
+    def get_permissions(self):
+        if self.request.method in ["PATCH", "DELETE", "POST"]:
+            return [
+                IsAdminUser(),
             ]
         return super().get_permissions()
 

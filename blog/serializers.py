@@ -62,6 +62,18 @@ class CommentSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
 
 
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = "__all__"
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = "__all__"
+
+
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
@@ -75,12 +87,18 @@ class PostSerializer(serializers.ModelSerializer):
             "is_visible",
             "is_active",
             "author",
+            "tags",
+            "category",
             "comments",
         ]
         read_only_fields = ["author"]
 
     created_at = serializers.DateTimeField(read_only=True)
     author = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    tags = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Tag.objects.all(), required=False
+    )
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
     comments = CommentPostSerializer(many=True, read_only=True)
 
     def validate_tittle(self, value):

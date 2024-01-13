@@ -83,6 +83,22 @@ class User(AbstractBaseUser):
         verbose_name_plural = "USERS"
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True, null=False)
+
+    def __str__(self):
+        str = f"{self.name}"
+        return str
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=50, unique=True, null=False)
+
+    def __str__(self):
+        str = f"{self.name}"
+        return str
+
+
 class Post(Base):
     tittle = models.CharField(max_length=255, unique=True)
     content = models.TextField()
@@ -93,6 +109,8 @@ class Post(Base):
         upload_to="staticsBlog/covers/%Y/%m/%d/", blank=True, default=""
     )
     author = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    tags = models.ManyToManyField(Tag, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         str = f"{self.tittle}"
