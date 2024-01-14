@@ -8,6 +8,7 @@ O foco deste app é mostrar meus conhecimentos em API RESTful, utilizando Django
 - Personalização de views de acordo com permissões de usuário
 - Segurança baseada em login e tokens jwt (access e refresh tokens)
 - Código simples e de fácil entendimento (seu código é a sua documentação)
+- Classificação de posts baseada em categorias e multitags
 
 ### Como implementar:
 As credenciais de banco e etc estão sendo lidas de um arquivo env.py, na mesma pasta de settings.py, o mesmo está incluido no .gitignore deste projeto.
@@ -33,3 +34,7 @@ Usuário normal só conseguem editar os seus próprios dados e não conseguem se
 
 ### Changelog:
   v1.0 - 10/01/2023
+    - versão inicial
+  v1.1 - 13/01/2023
+    - Inclusão de um sistema de classificação por categorias e sistema multitags 
+
